@@ -22,7 +22,7 @@ print(df.head(3))
 
 # --- Build Signal ---
 df["signal_ma"] = sma_crossover(df, window = 200)
-df["signal_rsi"] = rsi_mean_reversion(df, window = 14, oversold = 40, overbought = 60)
+df["signal_rsi"] = rsi_mean_reversion(df, window = 14, oversold = 30, overbought = 70)
 df["signal_roc"] = rate_of_change_momentum(df, window = 20)
 
 # --- Run each backtest ---
@@ -30,7 +30,7 @@ results = {}
 
 for name, col in [
     ("MA-200", "signal_ma"),
-    ("RSI MeanRev (40,60)", "signal_rsi"), 
+    ("RSI MeanRev (30,70)", "signal_rsi"), 
     ("ROC Momentum", "signal_roc")
 ]:
     out = run_backtest(df, signal_col=col)
@@ -57,7 +57,7 @@ for name, equity in results.items():
     # count days in market
     sig_col = {
         "MA-200": "signal_ma",
-        "RSI MeanRev (40,60)": "signal_rsi",
+        "RSI MeanRev (30,70)": "signal_rsi",
         "ROC Momentum": "signal_roc"
     }[name] # [name] extracts the value(equity) from the key(name) so that can pass the dict into the df in the next line
     days_in = int(df[sig_col].sum()) # No. of days you're holding
