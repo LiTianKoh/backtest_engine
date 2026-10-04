@@ -35,8 +35,8 @@ weight = {
 # --- RSI-heavy portfolio (To answer Session 2's Q2 intuition) (Session 3) ---
 # Core: MA trend follow. Satellite: RSI mean reversion
 weight_core_satellite = {
-    "signal_ma": 0.6,
-    "signal_rsi": 0.3,
+    "signal_ma": 0.3,
+    "signal_rsi": 0.6,
     "signal_roc": 0.1,
 }
 
@@ -76,7 +76,7 @@ print(f"\n{'Portfolio':<30} {'Final Equity':<12} {'Total Return %':13}")
 print("-" * 58)
 
 summarise("Custom Weight (33/33/33)", result_equal["equity_portfolio"])
-summarise("Core-Satellite (60/30/10)", result_cs["equity_portfolio"])
+summarise("Core-Satellite (30/60/10)", result_cs["equity_portfolio"])
 summarise("MA-200", result_equal["equity_signal_ma"])
 summarise("RSI", result_equal["equity_signal_rsi"])
 summarise("ROC-20", result_equal["equity_signal_roc"])
@@ -115,8 +115,8 @@ plt.figure(figsize=(14, 6))
 # )
 
 plt.plot(result_equal["equity_portfolio"].dropna(), linewidth = 1.5, label = "Equal Weight Portfolio (33/33/33)", color = "royalblue")
-plt.plot(result_cs["equity_portfolio"].dropna(), linewidth = 1.5, label = "Core-Satellite Portfolio (60/30/10)", color = "seagreen")
-plt.plot(result_equal["equity_portfolio"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray", alpha = 0.6)
+plt.plot(result_cs["equity_portfolio"].dropna(), linewidth = 1.5, label = "Core-Satellite Portfolio (30/60/10)", color = "seagreen")
+plt.plot(result_equal["equity_buyhold"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray", alpha = 0.6)
 
 # Individual strategies in the background
 for col, name, color in [
@@ -132,5 +132,5 @@ plt.legend()
 plt.grid(True, alpha = 0.3)
 plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 plt.tight_layout()
-plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 3/session3_multiportfolio_comparison1.png", dpi = 150)
+plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 3/session3_multiportfolio_comparison2.png", dpi = 150)
 plt.show()
