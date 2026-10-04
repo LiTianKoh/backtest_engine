@@ -49,10 +49,10 @@ def run_portfolio_backtest(df, strategy_weights, initial_capital = 100_000):
         raise ValueError(f"Weight sum must sum up to 1.0, current {total_weights: .3f}")
     
     # Build a DF of individual strategy returns
-    """"
+    """
     Creates a completely blank DataFrame table with no data columns,
     and assigns it a pre-existing row timeline (index)
-    """"
+    """
     strategy_returns = pd.DataFrame(index = df.index)
 
     for sig_col, weight in strategy_weights.items():
@@ -66,8 +66,8 @@ def run_portfolio_backtest(df, strategy_weights, initial_capital = 100_000):
     df["equity_buyhold"] = initial_capital * (1 + df["market_return"]).cumprod()
 
     # Also store the individual strategy equities for comparison
-    for sig_col in strategy_weights.items():
+    for sig_col, weight in strategy_weights.items(): # Have to unpack 'weight' because strategy_weights is a key:value dict, even if you're not using it in the loop
         col = f"equity_{sig_col}"
-        df[col] = initial_capital * (1 + df[sig_col] * df["market_return"]).cumprod()
+        df[col] = initial_capital * (1 + df[sig_col] * df["market_return"]).cumprod() # sig_col is either 1 or 0
 
     return df
