@@ -1,5 +1,6 @@
 import yfinance as yf
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from engine.backtester import run_backtest, run_portfolio_backtest
 from strategies.signals import sma_crossover, rsi_mean_reversion, rate_of_change_momentum
@@ -27,22 +28,26 @@ df["signal_roc"] = rate_of_change_momentum(df, window = 20)
 
 # --- Portfolio weightage (Session 3) ---
 weight = {
-    "signal_ma": 1/3,
-    "signal_rsi": 1/3,
-    "signal_roc": 1/3,
+    "signal_ma": 0.6,
+    "signal_rsi": 0.3,
+    "signal_roc": 0.1,
 }
 
 # --- RSI-heavy portfolio (To answer Session 2's Q2 intuition) (Session 3) ---
 # Core: MA trend follow. Satellite: RSI mean reversion
-weight_core_satellite = {
-    "signal_ma": 0.3,
-    "signal_rsi": 0.6,
-    "signal_roc": 0.1,
-}
+# weight_core_satellite = {
+#     "signal_ma": 0.3,
+#     "signal_rsi": 0.6,
+#     "signal_roc": 0.1,
+# }
 
 # --- Run both portfolios (Session 3) ---
-result_equal = run_portfolio_backtest(df, strategy_weights = weight)
-result_cs = run_portfolio_backtest(df, strategy_weights = weight_core_satellite)
+# result_equal = run_portfolio_backtest(df, strategy_weights = weight)
+# result_cs = run_portfolio_backtest(df, strategy_weights = weight_core_satellite)
+
+# --- Run with and without costs (Session 4) ---
+result_no_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0, slippage=0)
+result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0.0005, slippage=0.0005)
 
 # # --- Run each backtest (Session 2) ---
 # results = {}
@@ -75,12 +80,21 @@ def summarise(name, equity_series):
 print(f"\n{'Portfolio':<30} {'Final Equity':<12} {'Total Return %':13}")
 print("-" * 58)
 
-summarise("Custom Weight (33/33/33)", result_equal["equity_portfolio"])
-summarise("Core-Satellite (30/60/10)", result_cs["equity_portfolio"])
-summarise("MA-200", result_equal["equity_signal_ma"])
-summarise("RSI", result_equal["equity_signal_rsi"])
-summarise("ROC-20", result_equal["equity_signal_roc"])
-summarise("Buy & Hold", result_equal["equity_buyhold"])
+# Session 4
+summarise("No Cost", result_no_costs["equity_portfolio"])
+summarise("With Cost", result_with_costs["equity_portfolio"])
+summarise("MA-200 w Cost", result_with_costs["equity_signal_ma"])
+summarise("RSI w Cost", result_with_costs["equity_signal_rsi"])
+summarise("ROC w Cost", result_with_costs["equity_signal_roc"])
+summarise("Buy & Hold", result_with_costs["equity_buyhold"])
+
+# Session 3
+# summarise("Custom Weight (33/33/33)", result_equal["equity_portfolio"])
+# summarise("Core-Satellite (30/60/10)", result_cs["equity_portfolio"])
+# summarise("MA-200", result_equal["equity_signal_ma"])
+# summarise("RSI", result_equal["equity_signal_rsi"])
+# summarise("ROC-20", result_equal["equity_signal_roc"])
+# summarise("Buy & Hold", result_equal["equity_buyhold"])
 
 # --- Session 2 ---
 # for name, equity in results.items():
@@ -105,7 +119,9 @@ summarise("Buy & Hold", result_equal["equity_buyhold"])
 # print(f"{'Buy & Hold':<20} ${bh_final:>11,.0f} {bh_returns:>12.1f}% {'3523':>15}")
 
 # --- Plot ---
-plt.figure(figsize=(14, 6))
+
+# Session 3
+# plt.figure(figsize=(14, 6))
 # for name, equity in results.items():
 #     plt.plot(equity.dropna().index, equity.dropna(), linewidth = 1.5, label = name)
 # plt.plot(
@@ -114,9 +130,23 @@ plt.figure(figsize=(14, 6))
 #     color = "gray", linewidth = 1.2, alpha = 0.6, label = "Buy & Hold"
 # )
 
-plt.plot(result_equal["equity_portfolio"].dropna(), linewidth = 1.5, label = "Equal Weight Portfolio (33/33/33)", color = "royalblue")
-plt.plot(result_cs["equity_portfolio"].dropna(), linewidth = 1.5, label = "Core-Satellite Portfolio (30/60/10)", color = "seagreen")
-plt.plot(result_equal["equity_buyhold"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray", alpha = 0.6)
+# Session 4
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 9), sharex=True) # .subplot(nrows, ncols)
+
+ax1.plot(result_no_costs["equity_portfolio"].dropna(), linewidth=1.5, label="Portfolio (No Costs)", color="royalblue")
+ax1.plot(result_with_costs["equity_portfolio"].dropna(), linewidth=1.5, label="Portfolio (With Costs)", color="green")
+ax1.plot(result_with_costs["equity_buyhold"].dropna(), linewidth=1.5, label="Buy & Hold (With Costs)", color="gray")
+
+ax1.set_ylabel("Portfolio Value ($)")
+ax1.set_title("Impact of Realistic Execution Costs (SPY 2010-2023)")
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+
+# Session 3
+# plt.plot(result_equal["equity_portfolio"].dropna(), linewidth = 1.5, label = "Equal Weight Portfolio (33/33/33)", color = "royalblue")
+# plt.plot(result_cs["equity_portfolio"].dropna(), linewidth = 1.5, label = "Core-Satellite Portfolio (30/60/10)", color = "seagreen")
+# plt.plot(result_equal["equity_buyhold"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray", alpha = 0.6)
 
 # Individual strategies in the background
 for col, name, color in [
@@ -124,13 +154,15 @@ for col, name, color in [
     ("equity_signal_rsi", "RSI", "red"),
     ("equity_signal_roc", "ROC", "purple"),
 ]:
-    plt.plot(result_equal[col].dropna(), linewidth = 0.8, label = name, color = color)
+    ax2.plot(result_with_costs[col].dropna(), linewidth = 0.8, label = name, color = color)
 
-plt.title("Multi-Strategy Portfolio vs Individual Strategies (SPY 2010-2023)")
-plt.ylabel("Portfolio Value ($)")
-plt.legend()
-plt.grid(True, alpha = 0.3)
-plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+ax2.plot(result_with_costs["equity_buyhold"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray")
+
+ax2.set_ylabel("Portfolio Value ($)")
+ax2.legend()
+ax2.grid(True, alpha = 0.3)
+ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+
 plt.tight_layout()
-plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 3/session3_multiportfolio_comparison2.png", dpi = 150)
+plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 4/session4_costs.png", dpi = 150)
 plt.show()
