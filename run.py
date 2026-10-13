@@ -47,7 +47,7 @@ weight = {
 
 # --- Run with and without costs (Session 4) ---
 result_no_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0, slippage=0)
-result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0.0005, slippage=0.0005)
+result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0.001, slippage=0.002)
 
 # # --- Run each backtest (Session 2) ---
 # results = {}
@@ -81,8 +81,8 @@ print(f"\n{'Portfolio':<30} {'Final Equity':<12} {'Total Return %':13}")
 print("-" * 58)
 
 # Session 4
-summarise("No Cost", result_no_costs["equity_portfolio"])
-summarise("With Cost", result_with_costs["equity_portfolio"])
+summarise("60/30/10 No Cost", result_no_costs["equity_portfolio"])
+summarise("60/30/10 w Cost", result_with_costs["equity_portfolio"])
 summarise("MA-200 w Cost", result_with_costs["equity_signal_ma"])
 summarise("RSI w Cost", result_with_costs["equity_signal_rsi"])
 summarise("ROC w Cost", result_with_costs["equity_signal_roc"])
@@ -164,5 +164,5 @@ ax2.grid(True, alpha = 0.3)
 ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 
 plt.tight_layout()
-plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 4/session4_costs.png", dpi = 150)
+# plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 4/session4_costs_2.png", dpi = 150)
 plt.show()
