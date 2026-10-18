@@ -47,7 +47,7 @@ weight = {
 
 # --- Run with and without costs (Session 4) ---
 result_no_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0, slippage=0)
-result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0.001, slippage=0.002)
+result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0.0005, slippage=0.0005)
 
 # # --- Run each backtest (Session 2) ---
 # results = {}
@@ -163,6 +163,21 @@ ax2.legend()
 ax2.grid(True, alpha = 0.3)
 ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 
-plt.tight_layout()
+# plt.tight_layout()
 # plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 4/session4_costs_2.png", dpi = 150)
-plt.show()
+# plt.show()
+
+from analytics.metric import print_metric_table, plot_drawdown
+
+# Sesssion 5 - Metrics Table
+strategies = {
+    "Portfolio": result_with_costs["equity_portfolio"],
+    "MA-200": result_with_costs["equity_signal_ma"],
+    "RSI": result_with_costs["equity_signal_rsi"],
+    "ROC": result_with_costs["equity_signal_roc"],
+    "Buy & Hold": result_with_costs["equity_buyhold"],
+}
+
+print_metric_table(strategies)
+
+plot_drawdown(strategies, title="Strategy Performance & Drawdown Analysis (SPY 2010-2023)")
