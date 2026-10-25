@@ -1,0 +1,84 @@
+Session 6 - Walk Forward Validation
+===========================================
+What you've been doing:
+  2010─────────────────────────────────────2024
+  │◄──── developed AND tested here ───────►│
+  "My RSI (30,70) with SMA-200 works great!"
+
+Reality check:
+  Did you choose (30,70) because it's genuinely good?
+  Or because (30,70) happened to work on THIS specific 14-year period?
+
+The solution: To split your data into two zones that never touch
+2010──────────────────────2020──────────2024
+│◄──── IN-SAMPLE ────────►│◄─ OUT-OF ──►│
+│  develop & tune here    │   SAMPLE    │
+│  (you're allowed to     │  test here  │
+│   look at this)         │  (untouched │
+│                         │   until end)│
+
+Window 1:  Train 2010─2013 │ Test 2013─2014
+Window 2:  Train 2011─2014 │ Test 2014─2015
+Window 3:  Train 2012─2015 │ Test 2015─2016
+Window 4:  Train 2013─2016 │ Test 2016─2017
+...and so on
+
+Stitch all test periods together → realistic equity curve
+
+In layman terms:
+1. You test your strategy for a specific window and filter out the best strategy with the best metrics
+2. Using that same strategy, apply it to the years ahead of what you previously tested to see if the edge is genuine or not
+3. Not to not change the paramters of the strategy you're walking forward with
+
+Run the code and share the out-of-sample metrics table. Does your walk-forward Sharpe hold up close to in-sample?
+
+    Compare the sharpe ratio between the IS and the OOS
+    3yr/1yr:
+    In-sample Sharpe  : 0.39
+    Out-of-sample     : 0.38   ← degraded by 0.01
+
+    5yr/2yr:
+    In-sample Sharpe  : 0.39
+    Out-of-sample     : 0.22   ← degraded by 0.17
+
+Change train_years=3, test_years=1 to train_years=5, test_years=2. What effect do you expect on the number of windows and the stability of the per-window Sharpe? Run it and check.
+
+    I would expect the per window sharpe to drop
+
+    3yr/1yr (10 windows):
+    Sharpe range: -1.17 to +2.94   ← huge variance across windows
+    Aggregate OOS Sharpe: 0.38
+
+    5yr/2yr (4 windows):
+    Sharpe range: +0.20 to +1.12   ← much tighter, all positive
+    Aggregate OOS Sharpe: 0.22
+
+    Aggregate OOS Sharpe dropped (your prediction was right), but per-window variance actually decreased with larger windows. 
+    The reason: each 2-year test window spans more market regimes — it averages across bull and bear periods — so extreme values like +2.94 or -1.17 get smoothed out. 
+    Fewer windows also means one bad period has an outsized effect on the aggregate.
+
+    Trade Off:
+    Small windows → more windows → more data points → better statistics
+               → but each window is regime-specific → high variance
+
+    Large windows → fewer windows → fewer data points → weaker statistics
+                → but each window covers more regimes → lower variance
+
+    In practice, 3yr train / 1yr test is the most common configuration for daily strategies. It balances sample size against regime diversity.
+
+Look at your per-window Sharpe ratios. Is there a pattern — do certain years consistently perform worse? What market events happened in those years that might explain it?
+
+    I noticed that years between 2016-2017, 2017-2019, 2021-2023 performed poorly based on the sharpe ratio. If i were to look at the equity curve, the early 2020 suffered ahuge drop which I'm guessing it's because of covid-19
+
+    Window 3  (Test 2015)       : Sharpe  0.04  ← 2015 China slowdown scare
+    Window 6  (Test 2018–2019)  : Sharpe -0.15  ← Q4 2018 selloff (trade war)
+    Window 10 (Test 2022–2023)  : Sharpe -1.17  ← 2022 rate hike cycle
+
+    The 2022 window at -1.17 is the worst by far. This makes structural sense — 2022 was a rate hike environment where both stocks and bonds fell simultaneously. 
+    Trend-following strategies like SMA-200 got whipsawed repeatedly as the market alternated between bear rallies and selloffs.
+
+    On COVID — you’re right it shows as a large drop on the equity curve around early 2020. 
+    Interestingly though, Window 8 (Test 2020–2021) has a Sharpe of 0.73, which is actually decent. 
+    The reason: the SMA-200 likely triggered an exit signal fairly early in the crash, then re-entered during the recovery. 
+    The strategy didn’t avoid COVID entirely but it navigated it better than pure buy-and-hold’s -33% drawdown.
+===========================================

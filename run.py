@@ -130,18 +130,18 @@ summarise("Buy & Hold", result_with_costs["equity_buyhold"])
 #     color = "gray", linewidth = 1.2, alpha = 0.6, label = "Buy & Hold"
 # )
 
-# Session 4
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 9), sharex=True) # .subplot(nrows, ncols)
+# # Session 4
+# fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 9), sharex=True) # .subplot(nrows, ncols)
 
-ax1.plot(result_no_costs["equity_portfolio"].dropna(), linewidth=1.5, label="Portfolio (No Costs)", color="royalblue")
-ax1.plot(result_with_costs["equity_portfolio"].dropna(), linewidth=1.5, label="Portfolio (With Costs)", color="green")
-ax1.plot(result_with_costs["equity_buyhold"].dropna(), linewidth=1.5, label="Buy & Hold (With Costs)", color="gray")
+# ax1.plot(result_no_costs["equity_portfolio"].dropna(), linewidth=1.5, label="Portfolio (No Costs)", color="royalblue")
+# ax1.plot(result_with_costs["equity_portfolio"].dropna(), linewidth=1.5, label="Portfolio (With Costs)", color="green")
+# ax1.plot(result_with_costs["equity_buyhold"].dropna(), linewidth=1.5, label="Buy & Hold (With Costs)", color="gray")
 
-ax1.set_ylabel("Portfolio Value ($)")
-ax1.set_title("Impact of Realistic Execution Costs (SPY 2010-2023)")
-ax1.legend()
-ax1.grid(True, alpha=0.3)
-ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+# ax1.set_ylabel("Portfolio Value ($)")
+# ax1.set_title("Impact of Realistic Execution Costs (SPY 2010-2023)")
+# ax1.legend()
+# ax1.grid(True, alpha=0.3)
+# ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 
 # Session 3
 # plt.plot(result_equal["equity_portfolio"].dropna(), linewidth = 1.5, label = "Equal Weight Portfolio (33/33/33)", color = "royalblue")
@@ -149,35 +149,67 @@ ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 # plt.plot(result_equal["equity_buyhold"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray", alpha = 0.6)
 
 # Individual strategies in the background
-for col, name, color in [
-    ("equity_signal_ma", "MA-200", "orange"),
-    ("equity_signal_rsi", "RSI", "red"),
-    ("equity_signal_roc", "ROC", "purple"),
-]:
-    ax2.plot(result_with_costs[col].dropna(), linewidth = 0.8, label = name, color = color)
+# for col, name, color in [
+#     ("equity_signal_ma", "MA-200", "orange"),
+#     ("equity_signal_rsi", "RSI", "red"),
+#     ("equity_signal_roc", "ROC", "purple"),
+# ]:
+#     ax2.plot(result_with_costs[col].dropna(), linewidth = 0.8, label = name, color = color)
 
-ax2.plot(result_with_costs["equity_buyhold"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray")
+# ax2.plot(result_with_costs["equity_buyhold"].dropna(), linewidth = 1.5, label = "Buy & Hold", color = "gray")
 
-ax2.set_ylabel("Portfolio Value ($)")
-ax2.legend()
-ax2.grid(True, alpha = 0.3)
-ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+# ax2.set_ylabel("Portfolio Value ($)")
+# ax2.legend()
+# ax2.grid(True, alpha = 0.3)
+# ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
 
 # plt.tight_layout()
 # plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 4/session4_costs_2.png", dpi = 150)
 # plt.show()
 
-from analytics.metric import print_metric_table, plot_drawdown
+# from analytics.metric import print_metric_table, plot_drawdown
 
-# Sesssion 5 - Metrics Table
-strategies = {
-    "Portfolio": result_with_costs["equity_portfolio"],
-    "MA-200": result_with_costs["equity_signal_ma"],
-    "RSI": result_with_costs["equity_signal_rsi"],
-    "ROC": result_with_costs["equity_signal_roc"],
-    "Buy & Hold": result_with_costs["equity_buyhold"],
-}
+# # Sesssion 5 - Metrics Table
+# strategies = {
+#     "Portfolio": result_with_costs["equity_portfolio"],
+#     "MA-200": result_with_costs["equity_signal_ma"],
+#     "RSI": result_with_costs["equity_signal_rsi"],
+#     "ROC": result_with_costs["equity_signal_roc"],
+#     "Buy & Hold": result_with_costs["equity_buyhold"],
+# }
 
-print_metric_table(strategies)
+# print_metric_table(strategies)
 
-plot_drawdown(strategies, title="Strategy Performance & Drawdown Analysis (SPY 2010-2023)")
+# plot_drawdown(strategies, title="Strategy Performance & Drawdown Analysis (SPY 2010-2023)")
+
+# Session 6 - Walk Forward
+from engine.walk_forward import walk_forward_backtest
+from analytics.metric import plot_wf_comparison
+
+# ── Walk-forward validation ───────────────────────────────────────
+equity_wf, returns_wf = walk_forward_backtest(
+    df, 
+    strategy_weights=weight,
+    train_years=3,
+    test_years=1,
+    commission=0.0005,
+    slippage=0.0005
+)
+
+# ── Print out-of-sample metrics ───────────────────────────────────
+print(f"\n=== OUT-OF-SAMPLE PERFORMANCE ===")
+from analytics.metric import calculate_metrics
+wf_metrics = calculate_metrics(equity_wf["portfolio_return"])
+is_metrics = calculate_metrics(result_with_costs["equity_portfolio"])
+
+print(f"\n{'Metric':<20} {'In-Sample':<15} {'Out-Of-Sample':<15}")
+print("-" * 52)
+for metric in wf_metrics:
+    print(f"{metric:<20} {is_metrics[metric]:>15} {wf_metrics[metric]:>15}")
+
+# ── Plot comparison ───────────────────────────────────────────────
+plot_wf_comparison(
+    equity_insample=result_with_costs["equity_portfolio"],
+    equity_wf=equity_wf,
+    equity_buyhold=result_with_costs["equity_buyhold"]
+)

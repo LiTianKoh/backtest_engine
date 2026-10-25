@@ -56,8 +56,8 @@ def apply_costs(df, signal_col, commission=0.0005, slippage=0.0005):
     # Print trade summary
     n_trades = int((df[signal_col].diff().abs() == 1).sum())
     total_cost_pct = df["cost"].sum() * 100 # Commmission and slippage are in %, so have to convert back to %
-    print(f"[{signal_col}] Trades: {n_trades} | "
-          f"Total cost drag: {total_cost_pct:.2f}%")
+    # print(f"[{signal_col}] Trades: {n_trades} | "
+    #       f"Total cost drag: {total_cost_pct:.2f}%")
     
     return df["cost"]
 
@@ -91,7 +91,8 @@ def run_portfolio_backtest(df, strategy_weights, initial_capital = 100_000, comm
     """
     strategy_returns = pd.DataFrame(index = df.index)
     costs_cache = {}
-    print("\n=== Trade Cost Summary ===")
+    
+    # print("\n=== Trade Cost Summary ===")
 
     for sig_col, weight in strategy_weights.items():
         raw_returns = df[sig_col] * df["market_return"] # But how do you know how much to allocate per signal? Or do you just do a trial and error?

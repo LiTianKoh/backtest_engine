@@ -132,4 +132,27 @@ def plot_drawdown(strategies_dict, title="Drawdown Analysis"):
     # plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 5/drawdown_2.png", dpi = 150)
     plt.show()
 
+def plot_wf_comparison(equity_insample, equity_wf, equity_buyhold, title="Walk-Forward vs In-Sample vs Buy & Hold"):
+    """
+    Plots three equity curves side by side:
+    - In-sample (what your backtest claimed)
+    - Walk-forward (what you'd have actually made)
+    - Buy & Hold (the benchmark)
 
+    The gap between in-sample and walk-forward is your overfitting penalty.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(14, 6))
+    plt.plot(equity_insample.dropna(), label="In-Sample (full period)", color="royalblue", linewidth=1, alpha=0.7)    
+    plt.plot(equity_wf.dropna(), label="Out-Of-Sample (Walk-Forward)", color="seagreen", linewidth=1, alpha=0.7)    
+    plt.plot(equity_buyhold.dropna(), label="Buy & Hold", color="gray", linewidth=1, alpha=0.7)
+
+    plt.title(title)
+    plt.ylabel("Portfolio Value ($)")
+    plt.legend()
+    plt.grid(True, alpha = 0.3)
+    plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    plt.tight_layout()
+    # plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 6/wf_results_2", dpi = 150)
+    plt.show()
