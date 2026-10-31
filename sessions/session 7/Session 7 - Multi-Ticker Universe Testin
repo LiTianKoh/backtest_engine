@@ -1,0 +1,37 @@
+Session 7 - Multi-Ticker Universe Testing
+===========================================
+The intuition
+One ticker:   SPY      → one history  → one result    (could be luck)
+Universe:     30 stocks → 30 histories → a DISTRIBUTION of results
+
+If a hypothesis is real, it should work (or at least not fall apart) across most stocks, not just one index. So the thing you judge is the distribution (median Sharpe, share of tickers beating buy-and-hold), never the single best performer. With 30 tickers, a few will look great by pure luck.
+
+Two honest caveats:
+
+Stocks move together, so 30 stocks are worth far fewer than 30 independent tests.
+Survivorship bias is now real. This universe is today’s large caps, picked with hindsight (NVDA, AVGO, LLY...). Buy-and-hold looks better here than it would have in real time. We can’t fix this without paid point-in-time data, but we’ll keep it in mind when reading results.
+
+1. Drop NVDA and AVGO from TICKERS and rerun. How much does the equal-weight B&H result change? What does that tell you about concentration and survivorship in this universe?
+
+    Both portfolios dropped when you removed them, not just the strategy:
+
+    Annual return      Full (30)    Ex-NVDA/AVGO (28)
+    SMA-200              11.1%          9.6%
+    Buy & Hold           19.6%         17.9%
+
+    So it isn’t only that “NVDA beat B&H.” Both names were big winners for everyone. As a very rough back-of-envelope (annual returns aren’t exactly additive), the two averaged about 43%/yr under buy-and-hold versus about 18% for the other 28. Two names, 7% of the universe, added roughly 1.7pp/yr to B&H.
+
+    NVDA is the one name where the strategy won on Sharpe (1.16 vs 0.98), with only 57 trades, the fewest in the table. A long, clean uptrend is exactly what SMA-200 is built to ride.
+
+    AVGO is the opposite, and your table already answers it. It has the highest B&H Sharpe in the table (1.07) against 0.64 for the strategy, on 143 trades, the second-most after CVX. It was a big winner that the strategy kept getting shaken out of.
+
+    The pattern holds across the table. The names with the most trades (CVX 162, JNJ 132, ORCL 130, SBUX 128, SLB 126) show some of the widest gaps to buy-and-hold. That’s Session 4’s whipsaw story at universe scale.
+
+    Does removing them change the conclusion? No.
+    Median strategy Sharpe: 0.50 → 0.48
+    Median B&H Sharpe: 0.65 → 0.63
+    Tickers beating B&H: 3/30 → 2/28
+
+    The result isn’t driven by two outliers. Name by name, SMA-200 doesn’t beat buy-and-hold. B&H is also the benchmark most flattered by our hindsight-picked universe, so the gap is probably somewhat overstated.
+
+===========================================

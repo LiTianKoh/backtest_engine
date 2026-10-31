@@ -64,7 +64,7 @@ def calculate_metrics(equity_series, signal_series=None, risk_free_rate=0.05, pe
         "Win Rate":         f"{win_rate * 100:.1f}%",
     }
 
-def print_metric_table(strategy_dict, signals_dict=None):
+def print_metric_table(strategy_dict, signals_dict=None, risk_free_rate=0.0):
     """
     strategy_dict : {"Strategy Name": equity_series, ...}
     signals_dict  : {"Strategy Name": signal_series, ...}  ← optional
@@ -73,7 +73,7 @@ def print_metric_table(strategy_dict, signals_dict=None):
     for name, equity in strategy_dict.items():
         # If a signal was provided for this strategy, pass it through
         signal = signals_dict.get(name) if signals_dict else None
-        rows[name] = calculate_metrics(equity, signal_series=signal)
+        rows[name] = calculate_metrics(equity, signal_series=signal, risk_free_rate=risk_free_rate)
 
     # Print table
     metric_name = list(next(iter(rows.values())).keys()) # Turn keys into a list
@@ -156,3 +156,10 @@ def plot_wf_comparison(equity_insample, equity_wf, equity_buyhold, title="Walk-F
     plt.tight_layout()
     # plt.savefig("/Users/litian/Desktop/quant_projects/backtest_engine/sessions/session 6/wf_results_2", dpi = 150)
     plt.show()
+
+def sharpe(returns, periods_per_year=252):
+    r = returns.dropna()
+
+    if len(r) > 1 and r.std() > 0:
+        return r.mean() / r.std() * np.sqrt(periods_per_year)
+    return np.nan

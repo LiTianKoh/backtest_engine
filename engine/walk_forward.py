@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from engine.backtester import run_portfolio_backtest
+from strategies.signals import sma_crossover
+from analytics.metric import sharpe
 
 def walk_forward_backtest(df, strategy_weights, train_years = 3, test_years = 1, commission = 0.0005, slippage = 0.0005):
     """
@@ -93,3 +95,36 @@ def walk_forward_backtest(df, strategy_weights, train_years = 3, test_years = 1,
     print(f"Windows completed: {window_num}")
 
     return equity_wf, all_test_returns
+
+def net_returns(df, signal, cost = 0.001):
+    """
+    Signal x market return, minus cost on every position change
+    """
+    mkt = df["Close"].pct_change()
+    trades = signal.diff().abs().fillna(0)
+    return signal * mkt - trades * cost
+
+def walk_forward_optimised(df, candidates=(50, 100, 150, 200), train_years=3, test_years=1, cost=0.001):
+    train_n, test_n = train_years * 252, test_years * 252
+    warm = max(candidates)
+    oos, start = [], 0
+
+    while start + train_n + test_n <= len(df):
+        chunk = df.iloc[start : start + train_n + test_n]
+        scores, test_rets = {}, {}
+
+        for w in candidates:
+            r = net_returns(chunk, sma_crossover(chunk, window = w), cost)
+            scores[w] = sharpe(r.iloc[warm : train_n]) # judged on TRAIN only
+            test_rets[w] = r.iloc[train_n:] # stored, not looked at yet
+
+        best = max(scores, key=scores.get)                # frozen from here on
+        print(f"Train {chunk.index[0].date()} → {chunk.index[train_n-1].date()}  "
+              f"best SMA={best}  train Sharpe={scores[best]:.2f}  "
+              f"test Sharpe={sharpe(test_rets[best]):.2f}")
+        oos.append(test_rets[best])
+        start += test_n
+
+    oos_returns = pd.concat(oos).dropna()
+    print(f"\nPooled OOS Sharpe: {sharpe(oos_returns):.2f}")
+    return pd.concat(oos).dropna(), oos_returns

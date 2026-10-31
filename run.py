@@ -182,34 +182,76 @@ summarise("Buy & Hold", result_with_costs["equity_buyhold"])
 
 # plot_drawdown(strategies, title="Strategy Performance & Drawdown Analysis (SPY 2010-2023)")
 
-# Session 6 - Walk Forward
-from engine.walk_forward import walk_forward_backtest
-from analytics.metric import plot_wf_comparison
+# # Session 6 - Walk Forward
+# from engine.walk_forward import walk_forward_backtest
+# from analytics.metric import plot_wf_comparison
 
-# ── Walk-forward validation ───────────────────────────────────────
-equity_wf, returns_wf = walk_forward_backtest(
-    df, 
-    strategy_weights=weight,
-    train_years=3,
-    test_years=1,
-    commission=0.0005,
-    slippage=0.0005
-)
+# # ── Walk-forward validation ───────────────────────────────────────
+# equity_wf, returns_wf = walk_forward_backtest(
+#     df, 
+#     strategy_weights=weight,
+#     train_years=3,
+#     test_years=1,
+#     commission=0.0005,
+#     slippage=0.0005
+# )
 
-# ── Print out-of-sample metrics ───────────────────────────────────
-print(f"\n=== OUT-OF-SAMPLE PERFORMANCE ===")
-from analytics.metric import calculate_metrics
-wf_metrics = calculate_metrics(equity_wf["portfolio_return"])
-is_metrics = calculate_metrics(result_with_costs["equity_portfolio"])
+# # ── Print out-of-sample metrics ───────────────────────────────────
+# print(f"\n=== OUT-OF-SAMPLE PERFORMANCE ===")
+# from analytics.metric import calculate_metrics
+# wf_metrics = calculate_metrics(equity_wf["portfolio_return"])
+# is_metrics = calculate_metrics(result_with_costs["equity_portfolio"])
 
-print(f"\n{'Metric':<20} {'In-Sample':<15} {'Out-Of-Sample':<15}")
-print("-" * 52)
-for metric in wf_metrics:
-    print(f"{metric:<20} {is_metrics[metric]:>15} {wf_metrics[metric]:>15}")
+# print(f"\n{'Metric':<20} {'In-Sample':<15} {'Out-Of-Sample':<15}")
+# print("-" * 52)
+# for metric in wf_metrics:
+#     print(f"{metric:<20} {is_metrics[metric]:>15} {wf_metrics[metric]:>15}")
 
-# ── Plot comparison ───────────────────────────────────────────────
-plot_wf_comparison(
-    equity_insample=result_with_costs["equity_portfolio"],
-    equity_wf=equity_wf,
-    equity_buyhold=result_with_costs["equity_buyhold"]
-)
+# # ── Plot comparison ───────────────────────────────────────────────
+# plot_wf_comparison(
+#     equity_insample=result_with_costs["equity_portfolio"],
+#     equity_wf=equity_wf,
+#     equity_buyhold=result_with_costs["equity_buyhold"]
+# )
+
+# Session 6 (Patched)
+from engine.walk_forward import walk_forward_optimised, net_returns
+from strategies.signals import sma_crossover
+from analytics.metric import sharpe
+
+oos_df, oos_returns_series = walk_forward_optimised(df)
+
+fixed = net_returns(df, sma_crossover(df, window=200), cost=0.001)
+fixed_same_dates = fixed.loc[oos_returns_series.index] # Keep only the OOS dates
+
+print(f"Walk-forward (tuned each window) : {sharpe(oos_df):.2f}")
+print(f"Fixed SMA-200, same dates        : {sharpe(fixed_same_dates):.2f}")
+
+# Session 7
+from data.fetcher import fetch_universe
+from engine.universe import run_universe_backtest, universe_report
+from strategies.signals import sma_crossover
+from analytics.metric import print_metric_table
+
+prices = fetch_universe()
+
+"""
+lambmda is a function that is defined without a name, it's purpose is to act as a 
+interface adapter so that two incompatible pieces of code can work together
+
+importing the function is not enough as it only gives you access to its logic, 
+but it doesn't change its required inputs (signature)
+
+Since we're doing multiple tickers, we have to use lambda
+"""
+net, trades = run_universe_backtest(prices, lambda d: sma_crossover(d, window=200))
+table = universe_report(prices, net, trades)
+
+# Equal-weight portfolios (daily rebalanced, a simplification)
+INITAL = 100_000
+equity = {
+    "SMA-200 (equal-wt)": INITAL * (1 + net.mean(axis=1).fillna(0)).cumprod(),
+    "Buy & Hold (equal-wt)": INITAL * (1 + prices.pct_change().mean(axis=1).fillna(0)).cumprod(),
+}
+
+print_metric_table(equity)
