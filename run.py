@@ -22,16 +22,16 @@ print(df.info())
 print(df.head(3))
 
 # --- Build Signal ---
-df["signal_ma"] = sma_crossover(df, window = 200)
-df["signal_rsi"] = rsi_mean_reversion(df, window = 14, oversold = 30, overbought = 70)
-df["signal_roc"] = rate_of_change_momentum(df, window = 20)
+# df["signal_ma"] = sma_crossover(df, window = 200)
+# df["signal_rsi"] = rsi_mean_reversion(df, window = 14, oversold = 30, overbought = 70)
+# df["signal_roc"] = rate_of_change_momentum(df, window = 20)
 
 # --- Portfolio weightage (Session 3) ---
-weight = {
-    "signal_ma": 0.6,
-    "signal_rsi": 0.3,
-    "signal_roc": 0.1,
-}
+# weight = {
+#     "signal_ma": 0.6,
+#     "signal_rsi": 0.3,
+#     "signal_roc": 0.1,
+# }
 
 # --- RSI-heavy portfolio (To answer Session 2's Q2 intuition) (Session 3) ---
 # Core: MA trend follow. Satellite: RSI mean reversion
@@ -46,8 +46,8 @@ weight = {
 # result_cs = run_portfolio_backtest(df, strategy_weights = weight_core_satellite)
 
 # --- Run with and without costs (Session 4) ---
-result_no_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0, slippage=0)
-result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0.0005, slippage=0.0005)
+# result_no_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0, slippage=0)
+# result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commission=0.0005, slippage=0.0005)
 
 # # --- Run each backtest (Session 2) ---
 # results = {}
@@ -69,24 +69,24 @@ result_with_costs = run_portfolio_backtest(df, strategy_weights=weight, commissi
 #     results[name] = out["equity_strategy"]
 
 # --- Build Comparison Table ---
-INITIAL = 100_000
+# INITIAL = 100_000
 
-def summarise(name, equity_series):
-    clean = equity_series.dropna()
-    final = clean.iloc[-1]
-    returns = ((final / INITIAL) - 1) * 100
-    print(f"{name:<30} ${final:>11,.0f} {returns:>12.1f}%")
+# def summarise(name, equity_series):
+#     clean = equity_series.dropna()
+#     final = clean.iloc[-1]
+#     returns = ((final / INITIAL) - 1) * 100
+#     print(f"{name:<30} ${final:>11,.0f} {returns:>12.1f}%")
 
-print(f"\n{'Portfolio':<30} {'Final Equity':<12} {'Total Return %':13}")
-print("-" * 58)
+# print(f"\n{'Portfolio':<30} {'Final Equity':<12} {'Total Return %':13}")
+# print("-" * 58)
 
-# Session 4
-summarise("60/30/10 No Cost", result_no_costs["equity_portfolio"])
-summarise("60/30/10 w Cost", result_with_costs["equity_portfolio"])
-summarise("MA-200 w Cost", result_with_costs["equity_signal_ma"])
-summarise("RSI w Cost", result_with_costs["equity_signal_rsi"])
-summarise("ROC w Cost", result_with_costs["equity_signal_roc"])
-summarise("Buy & Hold", result_with_costs["equity_buyhold"])
+# # Session 4
+# summarise("60/30/10 No Cost", result_no_costs["equity_portfolio"])
+# summarise("60/30/10 w Cost", result_with_costs["equity_portfolio"])
+# summarise("MA-200 w Cost", result_with_costs["equity_signal_ma"])
+# summarise("RSI w Cost", result_with_costs["equity_signal_rsi"])
+# summarise("ROC w Cost", result_with_costs["equity_signal_roc"])
+# summarise("Buy & Hold", result_with_costs["equity_buyhold"])
 
 # Session 3
 # summarise("Custom Weight (33/33/33)", result_equal["equity_portfolio"])
@@ -214,44 +214,125 @@ summarise("Buy & Hold", result_with_costs["equity_buyhold"])
 #     equity_buyhold=result_with_costs["equity_buyhold"]
 # )
 
-# Session 6 (Patched)
-from engine.walk_forward import walk_forward_optimised, net_returns
-from strategies.signals import sma_crossover
-from analytics.metric import sharpe
+# # Session 6 (Patched)
+# from engine.walk_forward import walk_forward_optimised, net_returns
+# from strategies.signals import sma_crossover
+# from analytics.metric import sharpe
 
-oos_df, oos_returns_series = walk_forward_optimised(df)
+# oos_df, oos_returns_series = walk_forward_optimised(df)
 
-fixed = net_returns(df, sma_crossover(df, window=200), cost=0.001)
-fixed_same_dates = fixed.loc[oos_returns_series.index] # Keep only the OOS dates
+# fixed = net_returns(df, sma_crossover(df, window=200), cost=0.001)
+# fixed_same_dates = fixed.loc[oos_returns_series.index] # Keep only the OOS dates
 
-print(f"Walk-forward (tuned each window) : {sharpe(oos_df):.2f}")
-print(f"Fixed SMA-200, same dates        : {sharpe(fixed_same_dates):.2f}")
+# print(f"Walk-forward (tuned each window) : {sharpe(oos_df):.2f}")
+# print(f"Fixed SMA-200, same dates        : {sharpe(fixed_same_dates):.2f}")
 
-# Session 7
+# # Session 7
+# from data.fetcher import fetch_universe
+# from engine.universe import run_universe_backtest, universe_report
+# from strategies.signals import sma_crossover
+# from analytics.metric import print_metric_table
+
+# prices = fetch_universe()
+
+# """
+# lambmda is a function that is defined without a name, it's purpose is to act as a 
+# interface adapter so that two incompatible pieces of code can work together
+
+# importing the function is not enough as it only gives you access to its logic, 
+# but it doesn't change its required inputs (signature)
+
+# Since we're doing multiple tickers, we have to use lambda
+# """
+# net, trades = run_universe_backtest(prices, lambda d: sma_crossover(d, window=200))
+# table = universe_report(prices, net, trades)
+
+# # Equal-weight portfolios (daily rebalanced, a simplification)
+# INITAL = 100_000
+# equity = {
+#     "SMA-200 (equal-wt)": INITAL * (1 + net.mean(axis=1).fillna(0)).cumprod(),
+#     "Buy & Hold (equal-wt)": INITAL * (1 + prices.pct_change().mean(axis=1).fillna(0)).cumprod(),
+# }
+
+# print_metric_table(equity)
+
+# Session 8
 from data.fetcher import fetch_universe
-from engine.universe import run_universe_backtest, universe_report
-from strategies.signals import sma_crossover
-from analytics.metric import print_metric_table
+from engine.hypothesis import Hypothesis
+from engine.tester import test
 
-prices = fetch_universe()
+prices, volumes = fetch_universe(with_volume=True)
 
-"""
-lambmda is a function that is defined without a name, it's purpose is to act as a 
-interface adapter so that two incompatible pieces of code can work together
+# reversal = Hypothesis(
+#     "3-Day Reversal",
+#     signal=lambda df: df["Close"].pct_change(3) < -0.05,
+#     holding=5,
+# )
 
-importing the function is not enough as it only gives you access to its logic, 
-but it doesn't change its required inputs (signature)
+# # Check for lookahead bias
+# reversal_cheat = Hypothesis(
+#     "3-Day Reversal Cheat",
+#     signal=lambda df: df["Close"].pct_change(3).shift(-1) < -0.05,
+#     holding=5,
+# )
 
-Since we're doing multiple tickers, we have to use lambda
-"""
-net, trades = run_universe_backtest(prices, lambda d: sma_crossover(d, window=200))
-table = universe_report(prices, net, trades)
+# sma200_trend_above = Hypothesis(
+#     "Above SMA-200",
+#     signal=lambda df: df["Close"] > df["Close"].rolling(window=200).mean(),
+#     holding=None, # Holds indefinitely
+# )
 
-# Equal-weight portfolios (daily rebalanced, a simplification)
-INITAL = 100_000
-equity = {
-    "SMA-200 (equal-wt)": INITAL * (1 + net.mean(axis=1).fillna(0)).cumprod(),
-    "Buy & Hold (equal-wt)": INITAL * (1 + prices.pct_change().mean(axis=1).fillna(0)).cumprod(),
-}
+# sma44_vs_sma332 = Hypothesis(
+#     "SMA-44 vs SMA-332",
+#     signal=lambda df: df["Close"].rolling(window=44).mean() > df["Close"].rolling(window=332).mean(),
+#     holding=None, # Holds indefinitely
+# )
 
-print_metric_table(equity)
+# vol_reversal = Hypothesis(
+#     "Volume_Confirmed 3-Day Reversal",
+#     signal=lambda df: (df["Close"].pct_change(3) < -0.05) & (df["Volume"] > 1.5 * df["Volume"].rolling(window=20).mean()),
+#     holding=5, # Holds for 5 days
+# )
+
+# # Check for lookahead bias
+# sma5_trend_cheat = Hypothesis(
+#     "Below SMA-5",
+#     signal=lambda df: df["Close"] < df["Close"].rolling(window=5, center=True).mean(),
+#     holding=None, # Holds indefinitely
+# )
+
+# Development window only, doesn't touch 2019+ yet
+# test(reversal_cheat, prices, start="2010-01-01", end="2018-12-31")
+# test(sma200_trend_above, prices, volumes=volumes, start="2010-01-01", end="2018-12-31")
+# test(sma44_vs_sma332, prices, start="2010-01-01", end="2018-12-31")
+# test(sma5_trend_cheat, prices, start="2010-01-01", end="2018-12-31")
+
+import numpy as np
+import pandas as pd
+
+def vol_above_below(prices, window=200, start="2010-01-01", end="2018-12-31"):
+    rows = []
+    for t in prices.columns:
+        px  = prices[t].dropna()
+        sma = px.rolling(window).mean()
+        state = (px > sma).shift(1)             # what you knew BEFORE the day's return
+        ok  = sma.shift(1).notna()
+        r = px.pct_change()[ok].loc[start:end]
+        s = state[ok].loc[start:end].astype(bool)
+        rows.append({
+            "ticker": t,
+            "vol_above":     r[s].std()  * np.sqrt(252) * 100,
+            "vol_below":     r[~s].std() * np.sqrt(252) * 100,
+            "mean_above_bp": r[s].mean()  * 1e4,
+            "mean_below_bp": r[~s].mean() * 1e4,
+        })
+    tab = pd.DataFrame(rows).set_index("ticker")
+    print(tab.round(1).to_string())
+    print(f"\nMedian annualised vol   above: {tab.vol_above.median():.1f}%   "
+          f"below: {tab.vol_below.median():.1f}%")
+    print(f"Tickers with higher vol below SMA: {(tab.vol_below > tab.vol_above).mean()*100:.0f}%")
+    print(f"Median mean return/day  above: {tab.mean_above_bp.median():+.1f} bp   "
+          f"below: {tab.mean_below_bp.median():+.1f} bp")
+    return tab
+
+vol_above_below(prices)
